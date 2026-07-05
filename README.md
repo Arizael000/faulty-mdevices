@@ -1,8 +1,8 @@
 Faulty Medical Devices Dataset Analysis Project
 Overview
-Welcome to our project, which aims to explore and analyze the dataset from Kaggle: [Faulty Medical Devices Global Dataset](https://www.kaggle.com/datasets/vladimirmijatovic/faulty-medical-devices-global-dataset).
+Welcome to my project, which aims to explore and analyze the dataset from Kaggle: [Faulty Medical Devices Global Dataset](https://www.kaggle.com/datasets/vladimirmijatovic/faulty-medical-devices-global-dataset).
 
-Our objective is to gain insights into faulty medical devices across different regions and time periods.
+My objective is to gain insights into faulty medical devices across different regions and time periods.
 
 Project Objectives
 * ETL Data Life Cycle: Extract, Transform, and Load data for comprehensive analysis.
