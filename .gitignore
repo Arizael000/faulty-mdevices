@@ -1,7 +1,19 @@
+# Notebooks
 .ipynb_checkpoints/
-manufacturers-1681209657.csv
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Large data files (download from Kaggle; regenerate processed files with the pipeline)
+data/raw/*.csv
+data/processed/*.csv
 FaultyMedicalDevices.zip
-events-1681209680.csv
-devices-1681209661.csv
-UploadtoDB.ipynb
 AGENT.MD
+
+# OS
+.DS_Store
+Thumbs.db

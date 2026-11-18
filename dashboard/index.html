@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Faulty Medical Devices — Recall Dashboard</title>
+  <meta
+    name="description"
+    content="Interactive dashboard built from the ICIJ Faulty Medical Devices Global Dataset."
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">✚</span>
+      <div>
+        <h1>Faulty Medical Devices</h1>
+        <p>Global recall analysis · ICIJ dataset</p>
+      </div>
+    </div>
+    <div class="topbar-meta">
+      <span class="pill" id="rangeLabel">—</span>
+      <span class="pill" id="coverageLabel">—</span>
+      <span class="generated">Updated <span id="generatedAt">—</span></span>
+      <button class="ghost-btn" id="themeToggle" type="button" aria-label="Toggle color theme">
+        ☾ Dark
+      </button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="panel intro" aria-label="About this dashboard">
+      <div class="intro-lead">
+        <p class="intro-eyebrow">About this analysis</p>
+        <h2>Why this dashboard exists</h2>
+        <p class="intro-text">
+          Medical device recalls can affect millions of patients, yet the public record is split across device,
+          event and manufacturer files. This dashboard joins them to show where recalls concentrate by
+          manufacturer, device, risk class, country and distribution scope, and to separate all reported
+          recalls from those linked to a cleaned device record.
+        </p>
+      </div>
+
+      <dl class="intro-grid">
+        <div>
+          <dt>Analysis type</dt>
+          <dd>Descriptive, exploratory (EDA) analysis of public recalls, 1997–2018. No prediction or causal claims.</dd>
+        </div>
+        <div>
+          <dt>Audience</dt>
+          <dd>Patient-safety and regulatory analysts, data and quality teams, students, journalists and the public.</dd>
+        </div>
+        <div>
+          <dt>Built on</dt>
+          <dd>ICIJ Faulty Medical Devices Global Dataset, processed by a reproducible Python pipeline with 13 automated checks.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="panel filters" aria-label="Dashboard filters">
+      <div class="filter-group filter-scope">
+        <span class="filter-label">Scope</span>
+        <div class="segmented" role="group" aria-label="Recall scope">
+          <button class="segment is-active" data-scope="all" type="button" aria-pressed="true">
+            All recalls
+          </button>
+          <button class="segment" data-scope="enriched" type="button" aria-pressed="false">
+            Device-linked
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="yearFrom">From year</label>
+        <select id="yearFrom"></select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="yearTo">To year</label>
+        <select id="yearTo"></select>
+        <span class="filter-hint" id="yearRangeHint"></span>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="country">Country</label>
+        <select id="country"></select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="risk">Risk class</label>
+        <select id="risk"></select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label" for="implanted">Implanted</label>
+        <select id="implanted"></select>
+      </div>
+
+      <div class="filter-group filter-actions">
+        <button class="ghost-btn" id="reset" type="button">Reset filters</button>
+      </div>
+    </section>
+
+    <section class="kpis" aria-label="Key indicators">
+      <article class="kpi">
+        <span class="kpi-label">Total recalls</span>
+        <strong class="kpi-value" id="kpiTotal">—</strong>
+        <span class="kpi-sub" id="kpiTotalSub">in view</span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Device-linked recalls</span>
+        <strong class="kpi-value" id="kpiEnriched">—</strong>
+        <span class="kpi-sub" id="kpiEnrichedSub">—</span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Implanted devices</span>
+        <strong class="kpi-value" id="kpiImplants">—</strong>
+        <span class="kpi-sub" id="kpiImplantsSub">—</span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Countries</span>
+        <strong class="kpi-value" id="kpiCountries">—</strong>
+        <span class="kpi-sub" id="kpiCountriesSub">in view</span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Top manufacturer</span>
+        <strong class="kpi-value kpi-text" id="kpiManufacturer">—</strong>
+        <span class="kpi-sub" id="kpiManufacturerSub">—</span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Peak recall year</span>
+        <strong class="kpi-value" id="kpiPeak">—</strong>
+        <span class="kpi-sub" id="kpiPeakSub">—</span>
+      </article>
+    </section>
+
+    <div class="notice" id="cdnWarning" hidden>
+      Chart.js could not be loaded from the CDN. The KPIs, filters and tables still work,
+      but charts need an internet connection. Reconnect and reload the page.
+    </div>
+
+    <div class="notice notice-info" id="emptyState" hidden>
+      No recalls match the current filters. Try widening the year range or resetting the filters.
+    </div>
+
+    <p class="enriched-note" id="enrichedNote"></p>
+
+    <section class="grid" aria-label="Charts">
+      <article class="panel span-2">
+        <div class="panel-head">
+          <h2>Recalls per year</h2>
+          <span class="panel-hint">All recalls vs. recalls with a cleaned device record</span>
+        </div>
+        <div class="chart chart-tall">
+          <canvas id="chartYear" aria-label="Recalls per year"></canvas>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Recalls by country</h2>
+          <span class="panel-hint">Regulator country in the events table</span>
+        </div>
+        <div class="chart">
+          <canvas id="chartCountry" aria-label="Recalls by country"></canvas>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Distribution scope</h2>
+          <span class="panel-hint">Normalized from the free-text <code>distributed_to</code> field</span>
+        </div>
+        <div class="chart">
+          <canvas id="chartDistribution" aria-label="Distribution scope"></canvas>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Risk classification</h2>
+          <span class="panel-hint">FDA style classes, device-linked recalls</span>
+        </div>
+        <div class="chart">
+          <canvas id="chartRisk" aria-label="Recalls by risk class"></canvas>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Top manufacturers</h2>
+          <span class="panel-hint">By number of device-linked recalls</span>
+        </div>
+        <div class="chart chart-tall">
+          <canvas id="chartManufacturers" aria-label="Top manufacturers"></canvas>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Top device categories</h2>
+          <span class="panel-hint">Product classification of recalled devices</span>
+        </div>
+        <div class="chart chart-tall">
+          <canvas id="chartCategories" aria-label="Top device categories"></canvas>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Most recalled devices</h2>
+          <span class="panel-hint">Device name, “Device Recall” prefix removed</span>
+        </div>
+        <div class="chart chart-tall">
+          <canvas id="chartDevices" aria-label="Most recalled devices"></canvas>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h2>Determined causes</h2>
+          <span class="panel-hint">Root cause reported for the recall</span>
+        </div>
+        <div class="chart chart-tall">
+          <canvas id="chartCauses" aria-label="Determined causes"></canvas>
+        </div>
+      </article>
+
+      <article class="panel span-2">
+        <div class="panel-head">
+          <h2>Implant status by risk class</h2>
+          <span class="panel-hint">Device-linked recalls only</span>
+        </div>
+        <div class="chart">
+          <canvas id="chartImplanted" aria-label="Implant status by risk class"></canvas>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Manufacturer scorecard</h2>
+        <span class="panel-hint">Top 12 manufacturers for the current filters</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Manufacturer</th>
+              <th scope="col" class="num">Recalls</th>
+              <th scope="col" class="num">Implant share</th>
+              <th scope="col">Top category</th>
+              <th scope="col" class="num">Share</th>
+            </tr>
+          </thead>
+          <tbody id="manufacturerTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" id="quality">
+      <div class="panel-head">
+        <h2>Data quality &amp; pipeline</h2>
+        <span class="panel-hint">Raw file → cleaned table → dashboard cube</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Table</th>
+              <th scope="col" class="num">Raw shape</th>
+              <th scope="col" class="num">Clean shape</th>
+              <th scope="col" class="num">Columns dropped</th>
+              <th scope="col" class="num">Duplicate rows</th>
+            </tr>
+          </thead>
+          <tbody id="qualityTable"></tbody>
+        </table>
+      </div>
+
+      <p class="quality-summary" id="mergeSummary"></p>
+
+      <div class="validation-head">
+        <h3>Automated validation</h3>
+        <span class="pill" id="validationSummary">—</span>
+      </div>
+      <div class="validation" id="validationList"></div>
+
+      <details class="dropped">
+        <summary>Columns removed during cleaning</summary>
+        <p id="droppedColumns"></p>
+      </details>
+    </section>
+
+    <section class="panel" id="method">
+      <div class="panel-head">
+        <h2>Methodology &amp; principles</h2>
+        <span class="panel-hint">How the data was analyzed, cleaned and organized</span>
+      </div>
+
+      <div class="method-grid">
+        <article class="method-card">
+          <h3>Analysis</h3>
+          <ul>
+            <li>Business questions were defined before cleaning; every KPI and chart is computed from the cleaned tables, never hard-coded.</li>
+            <li>Free text is normalized explicitly: device names lose the “Device Recall” prefix and <code>distributed_to</code> becomes four distribution scopes.</li>
+            <li>Charts state their denominator — all recalls or the device-linked subset — and fold long tails into “Other (grouped)”.</li>
+          </ul>
+        </article>
+
+        <article class="method-card">
+          <h3>Cleaning</h3>
+          <ul>
+            <li>Rules live in code: complete-case devices, events with at least 15 non-null values, and columns above 40% nulls dropped.</li>
+            <li>Keys are checked for uniqueness, labels are unified, dates parsed, and duplicate or constant columns removed.</li>
+            <li>13 automated checks verify keys, completeness, allowed values, joins and report consistency.</li>
+          </ul>
+        </article>
+
+        <article class="method-card">
+          <h3>Organization</h3>
+          <ul>
+            <li>Raw data stays immutable; <code>data/processed/</code> and this dashboard are regenerated by the pipeline.</li>
+            <li>One command rebuilds everything: <code>python -m src.pipeline</code> (<code>--skip-etl</code> reuses the enriched CSV).</li>
+            <li>Three static files, no database or server; the notebooks document the exploration and decisions.</li>
+          </ul>
+        </article>
+      </div>
+
+      <p class="quality-summary">
+        Limitations: the complete-case device filter biases device-linked results toward US FDA records; 973 recalls
+        have no parsable date; distribution scopes come from rule-based normalization of free text, not a gazetteer.
+      </p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Source: ICIJ Faulty Medical Devices Global Dataset (Kaggle).</span>
+    <span>Static dashboard generated by <code>python -m src.pipeline</code>.</span>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC" crossorigin="anonymous"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "tables": {},
+  "merge": {},
+  "validation": {
+    "passed": 13,
+    "failed": 0,
+    "total": 13,
+    "checks": []
+  }
+}
